@@ -1,0 +1,285 @@
+= HiTorro Streams — Iterators, Sinks, JSON I/O
+:toc: left
+:toclevels: 3
+:sectnums:
+:source-highlighter: rouge
+
+`hitorro-streams` is the composable iterator + sink framework every
+HiTorro layer builds on: `AbstractIterator`, `Sink<T>`, CSV / NDJson
+readers, and JSON-shaped sinks that any Java or Spring app can use
+without adopting the higher-level mesh or type-system layers.
+
+Related:
+xref:../../hitorro-core/README.md[hitorro-core] ·
+xref:../../hitorro-basefile/README.md[hitorro-basefile (BaseFile I/O)] ·
+xref:../../hitorro-util/docs/ITERATOR_INFRASTRUCTURE.md[Iterator infrastructure deep-dive] ·
+xref:../../hitorro-jvssql/docs/streaming-queries.adoc[Streaming SQL]
+
+== The Sink&lt;T&gt; contract
+
+Every sink implements this interface (defined in `hitorro-core`,
+`com.hitorro.util.core.iterator.sinks.Sink`):
+
+[source,java]
+----
+public interface Sink<T> extends AutoCloseable, JsonInitable, Consumer<T> {
+    boolean init(JsonNode node);                 // called once, before start
+    boolean start()                throws IOException;
+    boolean add(T o)               throws IOException, StoreException;
+    default boolean addAll(Collection<T> os) throws IOException, StoreException;
+    boolean stop()                 throws IOException;
+    void    close()                throws IOException;
+
+    // Since the mesh-refactor push-down:
+    default long count()                                          { return -1; }
+    default boolean addIdempotent(String taskId, long seq, T o)
+            throws IOException, StoreException                    { return add(o); }
+
+    // Composition — all default, no reimplementation needed:
+    default Sink<T> tee(Sink<T> other);                          // multicast
+    default Sink<T> filter(Predicate<T> p);                      // drop non-matching
+    default <I> Sink<I> map(Function<I, T> f);                   // pre-transform
+    default Sink<T> maxPerTransaction(long max);                 // batching hint
+
+    // Consumer<T> — SAM-friendly for lambdas
+    static <T> Sink<T> of(Consumer<T> consumer);
+    static <T> CountingSink<T> counting();
+}
+----
+
+== Shipped sinks
+
+[cols="2,3,3", options="header"]
+|===
+| Class                             | Purpose                                                          | Home module
+| `CountingSink<T>`                 | Discard rows, count them                                         | hitorro-core
+| `IteratorSink<T>`                 | Collect rows into a list                                         | hitorro-core
+| `JsonNodeSinkBase`                | Convenience base for JSON-shaped sinks (default init/start/stop, atomic counter, `writeRow(row)` template method) | hitorro-streams
+| `NdjsonFileSink`                  | Newline-delimited JSON to a local file (auto-gzip on `.gz`)      | hitorro-streams
+| `MemoryTableSink`                 | In-process row buffer with an externally-provided list           | hitorro-streams
+| `KafkaSink`                       | Publish rows to a Kafka topic                                    | hitorro-streams-kafka
+| `NatsSink`                        | Publish rows to a NATS subject                                   | hitorro-streams-nats
+| `KvStoreSink`                     | RocksDB put keyed by a dotted path                               | hitorro-kvstore
+| `LuceneSink`                      | Schema-less Lucene indexer                                       | hitorro-index
+| `JvsLuceneSink`                   | Type-aware Lucene indexer (via `JVSLuceneIndexWriter`)           | hitorro-index
+|===
+
+== Standalone use — no mesh, no Spring
+
+**Example 1**: Read newline-delimited JSON, filter, count, write to disk.
+
+[source,java]
+----
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.hitorro.util.core.iterator.sinks.NdjsonFileSink;
+import com.hitorro.util.core.iterator.sinks.CountingSink;
+import java.nio.file.Files;
+import java.nio.file.Path;
+
+public class SimpleEtl {
+    public static void main(String[] args) throws Exception {
+        var mapper = new ObjectMapper();
+        var counter = new CountingSink<JsonNode>();
+        counter.start();
+
+        try (var out = new NdjsonFileSink("./big-cities.ndjson.gz")) {
+            out.start();
+            for (String line : Files.readAllLines(Path.of("cities.ndjson"))) {
+                JsonNode row = mapper.readTree(line);
+                if (row.path("population").asLong() > 1_000_000) {
+                    out.add(row);
+                    counter.add(row);
+                }
+            }
+        }
+        System.out.printf("Kept %d rows%n", counter.count());
+    }
+}
+----
+
+**Example 2**: Compose sinks with `tee()` — multicast, no wrapper class needed.
+
+[source,java]
+----
+Sink<JsonNode> file    = new NdjsonFileSink("./all.ndjson");
+Sink<JsonNode> counter = new CountingSink<>();
+Sink<JsonNode> big     = new NdjsonFileSink("./big.ndjson");
+
+// Fan out: every row → file AND counter AND (if big) → big
+Sink<JsonNode> fanout = file
+        .tee(counter)
+        .tee(big.filter(r -> r.path("population").asLong() > 1_000_000));
+
+fanout.start();
+for (JsonNode row : rows) fanout.add(row);
+fanout.close();
+
+System.out.println(counter.count() + " total rows written");
+----
+
+**Example 3**: Extend `JsonNodeSinkBase` for a custom sink — 15 lines
+of boilerplate you don't have to write:
+
+[source,java]
+----
+import com.hitorro.util.core.iterator.sinks.JsonNodeSinkBase;
+import java.io.IOException;
+
+/** POST each row to an HTTP endpoint. */
+public class HttpPostSink extends JsonNodeSinkBase {
+    private final HttpClient http = HttpClient.newHttpClient();
+    private final URI endpoint;
+
+    public HttpPostSink(URI endpoint) { this.endpoint = endpoint; }
+
+    @Override
+    protected void writeRow(JsonNode row) throws IOException {
+        try {
+            http.send(HttpRequest.newBuilder(endpoint)
+                    .header("content-type", "application/json")
+                    .POST(HttpRequest.BodyPublishers.ofString(row.toString()))
+                    .build(), HttpResponse.BodyHandlers.discarding());
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new IOException("post interrupted", e);
+        }
+    }
+}
+----
+
+`count()` and `add()` are already implemented by the base — you get
+progress tracking for free.
+
+== Spring Boot integration
+
+Register any sink as a bean and inject wherever needed:
+
+[source,java]
+----
+@Configuration
+public class SinkConfig {
+
+    @Bean
+    public Sink<JsonNode> auditLogSink(@Value("${audit.path}") String path) throws IOException {
+        var sink = new NdjsonFileSink(path);
+        sink.start();
+        return sink;
+    }
+
+    @Bean
+    @ConditionalOnProperty("app.kafka.enabled")
+    public Sink<JsonNode> kafkaEventSink(
+            @Value("${app.kafka.bootstrap}") String bootstrap,
+            @Value("${app.kafka.topic}") String topic) throws IOException {
+        var sink = new KafkaSink(bootstrap, topic, /*keyExpr*/ "event.id");
+        sink.start();
+        return sink;
+    }
+}
+
+@Service
+public class EventLogger {
+    private final Sink<JsonNode> audit;
+    private final Sink<JsonNode> kafka;
+
+    public EventLogger(@Qualifier("auditLogSink") Sink<JsonNode> audit,
+                       @Qualifier("kafkaEventSink") Sink<JsonNode> kafka) {
+        this.audit = audit;
+        this.kafka = kafka;
+    }
+
+    public void record(JsonNode event) throws Exception {
+        // Fan out to both: file AND kafka
+        audit.tee(kafka).add(event);
+    }
+}
+----
+
+Container `@PreDestroy` handles close via `AutoCloseable`.
+
+== Idempotent writes (exactly-once on retry)
+
+Any pub-sub or ETL with retries can dedup by `(taskId, seq)` using the
+default `addIdempotent` method — override on your sink to track the
+highest seq seen per taskId:
+
+[source,java]
+----
+public class IdempotentHttpSink extends JsonNodeSinkBase {
+    private final Map<String, Long> highest = new ConcurrentHashMap<>();
+
+    @Override
+    public boolean addIdempotent(String taskId, long seq, JsonNode row) throws IOException {
+        if (taskId != null) {
+            Long prev = highest.get(taskId);
+            if (prev != null && prev >= seq) return true;   // dedup
+            highest.put(taskId, seq);
+        }
+        return add(row);
+    }
+
+    @Override
+    protected void writeRow(JsonNode row) throws IOException {
+        // ... POST it ...
+    }
+}
+----
+
+Callers (mesh pipeline runtime, retry-aware Kafka consumers, ...) call
+`addIdempotent(taskId, seq, row)` — sinks that don't override just
+delegate to `add()` for at-least-once semantics.
+
+== Mesh pipeline usage (YAML config)
+
+Every sink above is wired into mesh pipelines via YAML — pipeline
+runtime resolves `SinkSpec` → your `Sink<JsonNode>` via a ServiceLoader
+adapter. Example:
+
+[source,yaml]
+----
+job: my-etl
+version: "1"
+nodes:
+  - id: enrich-and-index
+    pipeline:
+      source: {kind: ndjson-file, url: "file:./events.ndjson.gz"}
+      steps:
+        - {kind: filter, expr: "row.status == 'ACTIVE'"}
+      sinks:
+        - {kind: ndjson-file, url: "file:./out.ndjson.gz"}
+        - {kind: kafka, bootstrap: "localhost:9092", topic: events, keyExpr: id}
+        - {kind: kvstore, name: events, keyExpr: id}
+        - {kind: jvs-lucene, name: events, typeJsonResource: "classpath:/types/event.json", storeSource: false}
+        - {kind: counting, label: total}
+----
+
+Full pipeline reference:
+xref:../../hitorro-mesh-pipelines/docs/pipeline-framework.adoc[Pipeline Framework].
+
+== Iterator side (sources)
+
+`AbstractIterator<T>` is the pull-side counterpart. Rich API: `filter`,
+`map`, `flatMap`, `take`, `partition`, `reduce`, `sink()` to drain
+into a `Sink<T>`. Detail in
+xref:../../hitorro-util/docs/ITERATOR_INFRASTRUCTURE.md[iterator
+infrastructure].
+
+Shipped JSON-shaped sources:
+
+[cols="2,3,3", options="header"]
+|===
+| Source                            | Purpose                                    | Home
+| `CSVIteratorImpl`                 | CSV → `String[]` per row                   | hitorro-basefile
+| `NdjsonLocalTable`-style reader   | NDJson → `JsonNode`, gz/bz2 by extension   | hitorro-basefile (via `BaseFile`)
+| `KvStoreSource`                   | Iterate a RocksDB store as JSON rows       | hitorro-kvstore
+| `LuceneSearchSource`              | Iterate matching hits as JSON rows         | hitorro-index
+| `StreamSources.ndjson(...)`       | Big NDJson → JVS stream for `JvsSqlEngine` | hitorro-jvssql
+|===
+
+== Where to read more
+
+* xref:../../hitorro-core/README.md[hitorro-core] — the base `Sink<T>` + `AbstractIterator<T>` interfaces
+* xref:../../hitorro-util/docs/ITERATOR_INFRASTRUCTURE.md[Iterator infrastructure] — deep dive
+* xref:../../hitorro-jvssql/docs/streaming-queries.adoc[Streaming SQL] — push results anywhere
+* xref:../../hitorro-mesh-pipelines/docs/pipeline-framework.adoc[Pipelines] — YAML DAG runtime
