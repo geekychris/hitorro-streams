@@ -65,6 +65,16 @@ public abstract class JsonNodeSinkBase implements Sink<JsonNode> {
         return n.get();
     }
 
+    /**
+     * Increment the row counter without going through {@link #add}.
+     * Subclasses that override {@link Sink#addIdempotent} (or otherwise
+     * write rows outside the normal {@code add} path) call this to
+     * keep {@link #count()} honest.
+     */
+    protected long bumpCount() {
+        return n.incrementAndGet();
+    }
+
     @Override
     public void close() throws IOException { /* subclasses override */ }
 }
