@@ -119,11 +119,20 @@ public class Enqueue<E> extends AbstractEnqueue<E> {
     }
 
     public void setQueueComplete() {
+        // Propagate to the underlying ThreadedQueue — Dequeue.isCompleted()
+        // reads the flag from the ThreadedQueue, not from here, so setting
+        // only the local mirror leaves readers waiting forever. The
+        // ThreadedQueue variant now also notifyAll()s inside its monitor,
+        // waking any thread blocked in poll().
         queueComplete = true;
+        queue.setQueueComplete();
     }
 
     public boolean getQueueComplete() {
-        return queueComplete;
+        // Prefer the underlying flag — that's what Dequeue reads and what
+        // ThreadedQueue.poll consults. Fall back to the local mirror in
+        // case the underlying queue is null in some future subclass.
+        return queue != null ? queue.getQueueComplete() : queueComplete;
     }
 
     public Object getNotifier() {

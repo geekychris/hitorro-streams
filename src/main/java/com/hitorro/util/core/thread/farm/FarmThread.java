@@ -87,6 +87,14 @@ public class FarmThread<I, O, T> extends Thread {
 
                 }
                 if (work == null) {
+                    // ThreadedQueue.poll returns null on timeout instead of
+                    // throwing ThreadedQueueTimeoutException, so the exception
+                    // handler below never fires and the worker never notices
+                    // upstream setQueueComplete(). Check it here too.
+                    if (m_farm.getInputQueue().getQueueComplete()) {
+                        m_farm.notifyThreadExitDueToQueueComplete();
+                        break;
+                    }
                     continue;
                 }
                 O o = m_farm.produce(work);

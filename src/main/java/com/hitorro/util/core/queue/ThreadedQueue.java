@@ -270,7 +270,16 @@ public class ThreadedQueue<E> extends BoundedQueue<E> implements ThreadedQueueIn
      * if it has, there will be no more data and should shut down.
      */
     public void setQueueComplete() {
-        isComplete = true;
+        // Wake any thread blocked inside poll(...) so it can see the flag
+        // and exit its wait early — otherwise readers sleep until the
+        // poll timeout fires (which can be minutes), even though upstream
+        // has already declared "no more work". Consumers of the drain
+        // signal are the Farm workers on the input side and the reader
+        // iterator on the output side.
+        synchronized (notifier) {
+            isComplete = true;
+            notifier.notifyAll();
+        }
     }
 
     public boolean getQueueComplete() {
