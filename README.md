@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="assets/logo.png" alt="Hitorro Streams logo" width="180">
+</p>
+
 # hitorro-streams
 
 Iterator / sink / mapper / reducer pipeline framework for the HiTorro family.
