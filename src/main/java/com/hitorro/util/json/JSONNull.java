@@ -21,7 +21,7 @@
  */
 package com.hitorro.util.json;
 
-import com.fasterxml.jackson.core.JsonGenerator;
+import tools.jackson.core.JsonGenerator;
 import com.hitorro.util.json.visitors.JSONVisitor;
 
 import java.io.IOException;
@@ -49,7 +49,7 @@ public class JSONNull extends JSONElement<Object> {
     }
 
     @Override
-    public void write(final JsonGenerator generator) throws IOException {
+    public void write(final JsonGenerator generator) {
         generator.writeNull();
     }
 }

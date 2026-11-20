@@ -3,7 +3,7 @@
  */
 package com.hitorro.util.core.iterator.sinks;
 
-import com.fasterxml.jackson.databind.JsonNode;
+import tools.jackson.databind.JsonNode;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -14,6 +14,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.zip.GZIPOutputStream;
+import com.hitorro.util.json.JsonValues;
 
 /**
  * Writes CSV — header row on {@link #start()}, one comma-separated row
@@ -83,7 +84,7 @@ public final class CsvFileSink extends JsonNodeSinkBase {
 
     /** Scalar → asText(); object/array → compact JSON. */
     private static String cellText(JsonNode v) {
-        return v.isContainerNode() ? v.toString() : v.asText();
+        return v.isContainer() ? v.toString() : JsonValues.asText(v);
     }
 
     /** RFC 4180 minimal quoting — quote only when required. */

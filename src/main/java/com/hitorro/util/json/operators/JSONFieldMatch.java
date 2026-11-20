@@ -21,7 +21,7 @@
  */
 package com.hitorro.util.json.operators;
 
-import com.fasterxml.jackson.databind.JsonNode;
+import tools.jackson.databind.JsonNode;
 import com.hitorro.util.core.opers.HTPredicate;
 import com.hitorro.util.json.JSONElement;
 import com.hitorro.util.json.JSONType;

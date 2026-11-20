@@ -21,7 +21,7 @@
  */
 package com.hitorro.util.core.thread.farm.jobfarm;
 
-import com.fasterxml.jackson.databind.JsonNode;
+import tools.jackson.databind.JsonNode;
 import com.hitorro.util.core.iterator.sinks.Sink;
 
 import java.io.IOException;

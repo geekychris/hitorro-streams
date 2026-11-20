@@ -21,10 +21,10 @@
  */
 package com.hitorro.util.core.iterator;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.JsonNodeFactory;
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.node.ArrayNode;
+import tools.jackson.databind.node.JsonNodeFactory;
+import tools.jackson.databind.node.ObjectNode;
 import com.hitorro.util.core.params.PropertiesUtil;
 import com.hitorro.util.json.JSONUtil;
 import com.hitorro.util.json.keys.PropertyParts;
@@ -134,7 +134,7 @@ public class JsonValueSource implements ValueSourceForClass {
             // not indexed
             JsonNode par = PropertiesUtil.getNodeParent(pp, node, true);
             if (par.isObject()) {
-                ((ObjectNode) par).put(pp.getName(), JSONUtil.ensureJsonNode(value));
+                ((ObjectNode) par).set(pp.getName(), JSONUtil.ensureJsonNode(value));
             }
         }
         // throw error?

@@ -21,7 +21,7 @@
  */
 package com.hitorro.util.core.iterator.sinks;
 
-import com.fasterxml.jackson.databind.JsonNode;
+import tools.jackson.databind.JsonNode;
 import com.hitorro.util.core.iterator.Mapper;
 import com.hitorro.util.core.queue.ThreadedQueue;
 import com.hitorro.util.io.StoreException;

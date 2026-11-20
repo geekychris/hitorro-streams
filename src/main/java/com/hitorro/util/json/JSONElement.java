@@ -21,7 +21,7 @@
  */
 package com.hitorro.util.json;
 
-import com.fasterxml.jackson.core.JsonGenerator;
+import tools.jackson.core.JsonGenerator;
 import com.hitorro.util.core.Constants;
 import com.hitorro.util.core.Log;
 import com.hitorro.util.core.string.StringUtil;
@@ -63,16 +63,15 @@ public abstract class JSONElement<E> implements ValueSourceForClass {
      * Called at the root object to encapsulate the whole json tree in a a start and end.
      *
      * @param generator
-     * @throws IOException
      */
-    public void writeJSONGraph(JsonGenerator generator) throws IOException {
+    public void writeJSONGraph(JsonGenerator generator) {
         generator.writeStartObject();
         write(generator);
         generator.writeEndObject();
         generator.writeRawValue(Constants.NewLineString);
     }
 
-    public abstract void write(JsonGenerator generator) throws IOException;
+    public abstract void write(JsonGenerator generator);
 
     public abstract void visit(JSONVisitor visitor, int level);
 

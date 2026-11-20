@@ -21,7 +21,7 @@
  */
 package com.hitorro.util.json.visitors;
 
-import com.fasterxml.jackson.databind.JsonNode;
+import tools.jackson.databind.JsonNode;
 import gnu.trove.iterator.TObjectIntIterator;
 import gnu.trove.map.hash.TObjectIntHashMap;
 import com.hitorro.util.core.Console;
@@ -30,6 +30,7 @@ import com.hitorro.util.core.iterator.JsonValueSource;
 import com.hitorro.util.core.string.StringUtil;
 
 import java.util.*;
+import com.hitorro.util.json.JsonValues;
 
 /**
  * Count the occurrences of paths within json tree and also record the first instance of a node so that one can reverse
@@ -80,7 +81,7 @@ public class NodeCounter implements JSONVisitor {
         if (elem.isTextual() || elem.isBoolean() || elem.isNumber()) {
             inc(elem);
         } else if (elem.isObject()) {
-            Iterator<String> iter = elem.fieldNames();
+            Iterator<String> iter = elem.propertyNames().iterator();
             while (iter.hasNext()) {
                 String key = iter.next();
                 JsonNode v = elem.get(key);
@@ -128,7 +129,7 @@ public class NodeCounter implements JSONVisitor {
             } else if (elem.isBoolean()) {
                 type = Boolean.class;
             } else if (elem.isNumber()) {
-                Number n = elem.numberValue();
+                Number n = JsonValues.numberValue(elem);
                 annotation = n.toString();
                 type = Long.class;
             }

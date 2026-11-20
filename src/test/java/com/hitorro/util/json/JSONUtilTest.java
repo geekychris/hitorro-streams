@@ -21,10 +21,10 @@
  */
 package com.hitorro.util.json;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.JsonNodeFactory;
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.node.ArrayNode;
+import tools.jackson.databind.node.JsonNodeFactory;
+import tools.jackson.databind.node.ObjectNode;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Nested;
@@ -89,7 +89,7 @@ class JSONUtilTest {
         @Test
         @DisplayName("Should not detect text node as empty")
         void shouldNotDetectTextNodeAsEmpty() {
-            JsonNode textNode = JsonNodeFactory.instance.textNode("text");
+            JsonNode textNode = JsonNodeFactory.instance.stringNode("text");
             assertThat(com.hitorro.util.json.JSONUtil.nullOrEmpty(textNode)).isFalse();
         }
 
@@ -113,9 +113,9 @@ class JSONUtilTest {
             ArrayNode result = com.hitorro.util.json.JSONUtil.toJsonStringArray(list);
 
             assertThat(result.size()).isEqualTo(3);
-            assertThat(result.get(0).asText()).isEqualTo("apple");
-            assertThat(result.get(1).asText()).isEqualTo("banana");
-            assertThat(result.get(2).asText()).isEqualTo("cherry");
+            assertThat(JsonValues.asText(result.get(0))).isEqualTo("apple");
+            assertThat(JsonValues.asText(result.get(1))).isEqualTo("banana");
+            assertThat(JsonValues.asText(result.get(2))).isEqualTo("cherry");
         }
 
         @Test
@@ -136,9 +136,9 @@ class JSONUtilTest {
             ArrayNode result = com.hitorro.util.json.JSONUtil.toJsonStringArray(list);
 
             assertThat(result.size()).isEqualTo(3);
-            assertThat(result.get(0).asText()).isEqualTo("1");
-            assertThat(result.get(1).asText()).isEqualTo("2");
-            assertThat(result.get(2).asText()).isEqualTo("3");
+            assertThat(JsonValues.asText(result.get(0))).isEqualTo("1");
+            assertThat(JsonValues.asText(result.get(1))).isEqualTo("2");
+            assertThat(JsonValues.asText(result.get(2))).isEqualTo("3");
         }
     }
 
@@ -157,9 +157,9 @@ class JSONUtilTest {
             ObjectNode result = com.hitorro.util.json.JSONUtil.map2json(map);
 
             assertThat(result.size()).isEqualTo(3);
-            assertThat(result.get("name").asText()).isEqualTo("John");
-            assertThat(result.get("city").asText()).isEqualTo("New York");
-            assertThat(result.get("country").asText()).isEqualTo("USA");
+            assertThat(JsonValues.asText(result.get("name"))).isEqualTo("John");
+            assertThat(JsonValues.asText(result.get("city"))).isEqualTo("New York");
+            assertThat(JsonValues.asText(result.get("country"))).isEqualTo("USA");
         }
 
         @Test
@@ -195,9 +195,9 @@ class JSONUtilTest {
 
             ObjectNode result = com.hitorro.util.json.JSONUtil.map2json(map);
 
-            assertThat(result.get("email").asText()).isEqualTo("test@example.com");
-            assertThat(result.get("path").asText()).isEqualTo("/users/john/documents");
-            assertThat(result.get("message").asText()).isEqualTo("Hello, World!");
+            assertThat(JsonValues.asText(result.get("email"))).isEqualTo("test@example.com");
+            assertThat(JsonValues.asText(result.get("path"))).isEqualTo("/users/john/documents");
+            assertThat(JsonValues.asText(result.get("message"))).isEqualTo("Hello, World!");
         }
     }
 
@@ -271,7 +271,7 @@ class JSONUtilTest {
             ArrayNode array = (ArrayNode) result;
             boolean foundTestClass = false;
             for (JsonNode element : array) {
-                String trace = element.asText();
+                String trace = JsonValues.asText(element);
                 if (trace.contains("JSONUtilTest")) {
                     foundTestClass = true;
                     break;
@@ -332,9 +332,9 @@ class JSONUtilTest {
             ArrayNode result = com.hitorro.util.json.JSONUtil.toJsonStringArray(mixed);
 
             assertThat(result.size()).isEqualTo(3);
-            assertThat(result.get(0).asText()).isEqualTo("string");
-            assertThat(result.get(1).asText()).isEqualTo("123");
-            assertThat(result.get(2).asText()).isEqualTo("true");
+            assertThat(JsonValues.asText(result.get(0))).isEqualTo("string");
+            assertThat(JsonValues.asText(result.get(1))).isEqualTo("123");
+            assertThat(JsonValues.asText(result.get(2))).isEqualTo("true");
         }
 
         @Test
@@ -346,8 +346,8 @@ class JSONUtilTest {
 
             ObjectNode result = com.hitorro.util.json.JSONUtil.map2json(map);
 
-            assertThat(result.get("greeting").asText()).isEqualTo("Hello 世界");
-            assertThat(result.get("emoji").asText()).isEqualTo("🎉");
+            assertThat(JsonValues.asText(result.get("greeting"))).isEqualTo("Hello 世界");
+            assertThat(JsonValues.asText(result.get("emoji"))).isEqualTo("🎉");
         }
     }
 }

@@ -3,8 +3,8 @@
  */
 package com.hitorro.util.core.iterator.sinks;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.node.ObjectNode;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.zip.GZIPInputStream;
 
 import static org.junit.jupiter.api.Assertions.*;
+import com.hitorro.util.json.JsonMappers;
 
 /**
  * Round-trip tests for {@link CsvFileSink}. Covers:
@@ -30,7 +31,7 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 class CsvFileSinkTest {
 
-    private static final ObjectMapper JSON = new ObjectMapper();
+    private static final ObjectMapper JSON = JsonMappers.json();
 
     @Test
     void writesHeaderAndRows(@TempDir Path tmp) throws Exception {

@@ -21,8 +21,8 @@
  */
 package com.hitorro.util.core;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.node.ObjectNode;
 import com.sun.management.UnixOperatingSystemMXBean;
 import com.hitorro.util.core.params.GlobalProperties;
 import com.hitorro.util.core.params.HTProperties;

@@ -21,16 +21,17 @@
  */
 package com.hitorro.util.core.iterator.json;
 
-import com.fasterxml.jackson.core.JsonLocation;
-import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonToken;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.JsonNodeFactory;
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import tools.jackson.core.TokenStreamLocation;
+import tools.jackson.core.exc.StreamReadException;
+import tools.jackson.core.JsonParser;
+import tools.jackson.core.JsonToken;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.node.ArrayNode;
+import tools.jackson.databind.node.JsonNodeFactory;
+import tools.jackson.databind.node.ObjectNode;
 
 import java.io.IOException;
+import tools.jackson.core.JacksonException;
 
 /**
  * Created by chris on 5/16/16.
@@ -49,22 +50,22 @@ public class HTJSONParser {
                 return null;
             }
             return readPrivate();
-        } catch (IOException e) {
+        } catch (JacksonException e) {
             throw new JSONParseException(e);
         }
 
     }
 
-    protected JsonNode readPrivate() throws IOException {
-        JsonToken tok = parser.getCurrentToken();
+    protected JsonNode readPrivate() {
+        JsonToken tok = parser.currentToken();
 
         return switchOnToken(tok);
     }
 
-    protected final JsonNode switchOnToken(final JsonToken tok) throws IOException {
+    protected final JsonNode switchOnToken(final JsonToken tok) {
         switch (tok) {
             case VALUE_STRING:
-                return JsonNodeFactory.instance.textNode(parser.getText());
+                return JsonNodeFactory.instance.stringNode(parser.getText());
             case START_OBJECT:
                 return readObject();
             case START_ARRAY:
@@ -98,24 +99,24 @@ public class HTJSONParser {
         return null;
     }
 
-    private final JsonNode readObject() throws IOException {
+    private final JsonNode readObject() {
         try {
             parser.nextToken();
             ObjectNode map = JsonNodeFactory.instance.objectNode();
-            if (parser.getCurrentToken() != JsonToken.END_OBJECT) {
+            if (parser.currentToken() != JsonToken.END_OBJECT) {
                 // not an empty object
                 do {
-                    String name = parser.getCurrentName();
+                    String name = parser.currentName();
                     parser.nextToken();
-                    map.put(name, readPrivate());
+                    map.set(name, readPrivate());
                     parser.nextToken();
 
-                } while (parser.getCurrentToken() != JsonToken.END_OBJECT);
+                } while (parser.currentToken() != JsonToken.END_OBJECT);
             }
 
             return map;
-        } catch (JsonParseException jpe) {
-            JsonLocation jl = jpe.getLocation();
+        } catch (StreamReadException jpe) {
+            TokenStreamLocation jl = jpe.getLocation();
             // XXX Can we put some better logging exception description here?
             throw jpe;
         }
@@ -125,15 +126,15 @@ public class HTJSONParser {
         return JsonNodeFactory.instance.arrayNode();
     }
 
-    private final JsonNode readArray() throws IOException {
+    private final JsonNode readArray() {
         parser.nextToken();
         ArrayNode list = getArrayNode();
-        if (parser.getCurrentToken() != JsonToken.END_ARRAY) {
+        if (parser.currentToken() != JsonToken.END_ARRAY) {
             // not an empty array
             do {
                 list.add(readPrivate());
                 parser.nextToken();
-            } while (parser.getCurrentToken() != JsonToken.END_ARRAY);
+            } while (parser.currentToken() != JsonToken.END_ARRAY);
         }
         return list;
     }

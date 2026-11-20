@@ -21,17 +21,19 @@
  */
 package com.hitorro.util.json;
 
-import com.fasterxml.jackson.core.JsonFactory;
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.databind.JsonNode;
+import tools.jackson.core.JsonParser;
+import tools.jackson.databind.JsonNode;
 import com.hitorro.util.core.iterator.json.HTJSONParser;
 import com.hitorro.util.core.iterator.mappers.BaseMapper;
 import com.hitorro.util.io.ResetableStringReader;
 
 import java.io.IOException;
+import com.hitorro.util.json.JsonMappers;
+import tools.jackson.databind.json.JsonMapper;
+import tools.jackson.core.JacksonException;
 
 public class String2JsonMapper extends BaseMapper<String, JsonNode> {
-    private final static JsonFactory factory = new JsonFactory();
+    private final static JsonMapper factory = JsonMappers.json();
     protected JsonParser parser = null;
     private ResetableStringReader reader = new ResetableStringReader("");
 
@@ -44,7 +46,7 @@ public class String2JsonMapper extends BaseMapper<String, JsonNode> {
         try {
             HTJSONParser jnp = new HTJSONParser(factory.createParser(reader));
             return jnp.read();
-        } catch (IOException e) {
+        } catch (JacksonException e) {
             return null;
         }
     }
