@@ -82,9 +82,12 @@ public final class CsvFileSink extends JsonNodeSinkBase {
         if (writer != null) { writer.flush(); writer.close(); writer = null; }
     }
 
-    /** Scalar → asText(); object/array → compact JSON. */
+    /**
+     * Scalar → asText(); object/array → compact JSON, written with JsonMappers rather than
+     * JsonNode.toString() (on Jackson 3 that throws past 500 nesting levels; Jackson 2: 1000).
+     */
     private static String cellText(JsonNode v) {
-        return v.isContainer() ? v.toString() : JsonValues.asText(v);
+        return v.isContainer() ? com.hitorro.util.json.JsonMappers.json().writeValueAsString(v) : JsonValues.asText(v);
     }
 
     /** RFC 4180 minimal quoting — quote only when required. */
