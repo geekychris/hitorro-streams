@@ -22,7 +22,7 @@
 package com.hitorro.util.core.iterator.sinks;
 
 
-import com.fasterxml.jackson.databind.JsonNode;
+import tools.jackson.databind.JsonNode;
 import com.hitorro.util.core.Log;
 import com.hitorro.util.core.iterator.mappers.BaseMapper;
 import com.hitorro.util.core.string.Fmt;

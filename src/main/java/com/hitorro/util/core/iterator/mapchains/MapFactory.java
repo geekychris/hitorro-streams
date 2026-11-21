@@ -21,8 +21,8 @@
  */
 package com.hitorro.util.core.iterator.mapchains;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.node.ObjectNode;
 import com.hitorro.util.core.GenericKeyValue;
 import com.hitorro.util.core.iterator.mappers.BaseMapper;
 import com.hitorro.util.core.iterator.mappers.MapperCollection;
@@ -144,7 +144,7 @@ public class MapFactory {
 
         ObjectNode maps = (ObjectNode) args.get("functions");
 
-        Iterator<String> fieldNames = maps.fieldNames();
+        Iterator<String> fieldNames = maps.propertyNames().iterator();
         while (fieldNames.hasNext()) {
             String key = fieldNames.next();
 

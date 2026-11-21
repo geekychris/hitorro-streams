@@ -21,9 +21,8 @@
  */
 package com.hitorro.util.json.iterators;
 
-import com.fasterxml.jackson.core.JsonFactory;
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonToken;
+import tools.jackson.core.JsonParser;
+import tools.jackson.core.JsonToken;
 import com.hitorro.util.core.ListUtil;
 import com.hitorro.util.core.Log;
 import com.hitorro.util.core.iterator.AbstractIterator;
@@ -37,6 +36,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.TreeMap;
+import com.hitorro.util.json.JsonMappers;
+import tools.jackson.databind.json.JsonMapper;
+import tools.jackson.core.JacksonException;
 
 /**
  * Iterator that wraps some kind of stream providing an collection of JSON domlets.
@@ -47,7 +49,7 @@ import java.util.TreeMap;
 public class HTJSONIterator extends AbstractIterator<com.hitorro.util.json.JSONElement> {
     public static com.hitorro.util.json.JSONMap EmptyMap = new com.hitorro.util.json.JSONMap(Collections.emptyMap());
     public static com.hitorro.util.json.JSONList EmptyList = new com.hitorro.util.json.JSONList(Collections.emptyList());
-    private final static JsonFactory factory = new JsonFactory();
+    private final static JsonMapper factory = JsonMappers.json();
     public static final String HTTypeKey = "ht_type";
     private JsonParser parser = null;
     private com.hitorro.util.json.JSONElement domlet;
@@ -58,8 +60,8 @@ public class HTJSONIterator extends AbstractIterator<com.hitorro.util.json.JSONE
 
     public HTJSONIterator(Reader reader) {
         try {
-            parser = factory.createJsonParser(reader);
-        } catch (IOException e) {
+            parser = factory.createParser(reader);
+        } catch (JacksonException e) {
             Log.filesystem.error("Unable to create parser %s %e", e, e);
         }
         domlet = read();
@@ -68,8 +70,8 @@ public class HTJSONIterator extends AbstractIterator<com.hitorro.util.json.JSONE
     public HTJSONIterator(Reader reader, String typeName) {
         type = TypeManagerBase.get().getTypeByShortName(typeName);
         try {
-            parser = factory.createJsonParser(reader);
-        } catch (IOException e) {
+            parser = factory.createParser(reader);
+        } catch (JacksonException e) {
             Log.filesystem.error("Unable to create parser %s %e", e, e);
         }
         domlet = read();
@@ -109,14 +111,14 @@ public class HTJSONIterator extends AbstractIterator<com.hitorro.util.json.JSONE
                 return null;
             }
             return readPrivate();
-        } catch (IOException e) {
+        } catch (JacksonException e) {
             return null;
         }
 
     }
 
-    private com.hitorro.util.json.JSONElement readPrivate() throws IOException {
-        JsonToken tok = parser.getCurrentToken();
+    private com.hitorro.util.json.JSONElement readPrivate() {
+        JsonToken tok = parser.currentToken();
         switch (tok) {
             case START_OBJECT:
                 return readObject();
@@ -140,20 +142,20 @@ public class HTJSONIterator extends AbstractIterator<com.hitorro.util.json.JSONE
         return null;
     }
 
-    private com.hitorro.util.json.JSONElement readObject() throws IOException {
+    private com.hitorro.util.json.JSONElement readObject() {
         parser.nextToken();
         TreeMap<String, com.hitorro.util.json.JSONElement> map = getNewMap();
 
-        if (parser.getCurrentToken() != JsonToken.END_OBJECT) {
+        if (parser.currentToken() != JsonToken.END_OBJECT) {
             // not an empty object
             do {
-                String name = parser.getCurrentName();
+                String name = parser.currentName();
                 parser.nextToken();
                 map.put(name, readPrivate());
                 parser.nextToken();
 
             }
-            while (parser.getCurrentToken() != JsonToken.END_OBJECT);
+            while (parser.currentToken() != JsonToken.END_OBJECT);
         }
         if (map.size() == 0) {
             // we didnt use the apply
@@ -163,16 +165,16 @@ public class HTJSONIterator extends AbstractIterator<com.hitorro.util.json.JSONE
         return new com.hitorro.util.json.JSONMap(map);
     }
 
-    private com.hitorro.util.json.JSONElement readArray() throws IOException {
+    private com.hitorro.util.json.JSONElement readArray() {
         parser.nextToken();
         List<com.hitorro.util.json.JSONElement> list = getNewList();
-        if (parser.getCurrentToken() != JsonToken.END_ARRAY) {
+        if (parser.currentToken() != JsonToken.END_ARRAY) {
             // not an empty array
             do {
                 list.add(readPrivate());
                 parser.nextToken();
             }
-            while (parser.getCurrentToken() != JsonToken.END_ARRAY);
+            while (parser.currentToken() != JsonToken.END_ARRAY);
         }
         if (ListUtil.nullOrEmpty(list)) {
             // we didnt use this guy,

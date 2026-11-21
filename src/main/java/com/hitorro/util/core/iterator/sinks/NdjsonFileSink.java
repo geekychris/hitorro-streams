@@ -3,8 +3,8 @@
  */
 package com.hitorro.util.core.iterator.sinks;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -14,6 +14,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.zip.GZIPOutputStream;
+import com.hitorro.util.json.JsonMappers;
 
 /**
  * Writes newline-delimited JSON — one JSON value per line — to a local
@@ -31,7 +32,7 @@ import java.util.zip.GZIPOutputStream;
  */
 public final class NdjsonFileSink extends JsonNodeSinkBase {
 
-    private static final ObjectMapper JSON = new ObjectMapper();
+    private static final ObjectMapper JSON = JsonMappers.json();
 
     private final String url;
     private BufferedWriter writer;

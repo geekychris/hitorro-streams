@@ -21,7 +21,7 @@
  */
 package com.hitorro.util.html;
 
-import com.fasterxml.jackson.databind.JsonNode;
+import tools.jackson.databind.JsonNode;
 import com.hitorro.util.core.GenericKeyValue;
 import com.hitorro.util.html.constraint.TypeLinkConstraint;
 import org.junit.jupiter.api.DisplayName;
@@ -34,6 +34,7 @@ import java.util.List;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.*;
+import com.hitorro.util.json.JsonValues;
 
 @DisplayName("HTMLParser")
 class HTMLParserTest {
@@ -259,8 +260,8 @@ class HTMLParserTest {
             var parser = parse("<html><head><script type=\"application/ld+json\">{\"@type\":\"Organization\",\"name\":\"Test\"}</script></head><body></body></html>");
             List<JsonNode> data = parser.getStructuredData();
             assertThat(data).hasSize(1);
-            assertThat(data.get(0).get("@type").asText()).isEqualTo("Organization");
-            assertThat(data.get(0).get("name").asText()).isEqualTo("Test");
+            assertThat(JsonValues.asText(data.get(0).get("@type"))).isEqualTo("Organization");
+            assertThat(JsonValues.asText(data.get(0).get("name"))).isEqualTo("Test");
         }
 
         @Test

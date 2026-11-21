@@ -21,7 +21,7 @@
  */
 package com.hitorro.util.core.iterator.queue;
 
-import com.fasterxml.jackson.databind.JsonNode;
+import tools.jackson.databind.JsonNode;
 
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;

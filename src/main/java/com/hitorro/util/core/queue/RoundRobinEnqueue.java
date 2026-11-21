@@ -21,7 +21,7 @@
  */
 package com.hitorro.util.core.queue;
 
-import com.fasterxml.jackson.databind.JsonNode;
+import tools.jackson.databind.JsonNode;
 import com.hitorro.util.core.BooleanUtil;
 import com.hitorro.util.core.Log;
 import com.hitorro.util.core.iterator.queue.AbstractDequeue;

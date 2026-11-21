@@ -1,0 +1,12 @@
+jsonFileSink.false=[{"id":1,"name":"a","tags":["x","y"],"meta":{},"u":"é /"},{"id":2,"v":1.5,"n":null,"big":12345678901234567890,"e":[]}]
+jsonFileSink.true=[ {\n  "id" : 1,\n  "name" : "a",\n  "tags" : [ "x", "y" ],\n  "meta" : { },\n  "u" : "é /"\n}, {\n  "id" : 2,\n  "v" : 1.5,\n  "n" : null,\n  "big" : 12345678901234567890,\n  "e" : [ ]\n} ]
+ndjsonFileSink={"id":1,"name":"a","tags":["x","y"],"meta":{},"u":"é /"}\n{"id":2,"v":1.5,"n":null,"big":12345678901234567890,"e":[]}\n
+jsonIterator={"a":1,"b":[1,2.5,"s",true,false,null,{}],"c":{},"l":12345678901} | a:IntNode,b:ArrayNode,c:ObjectNode,l:LongNode, | [] | {"big":1312754386,"dec":1500.0,"neg":-0.0} | big:IntNode,dec:DoubleNode,neg:DoubleNode, | "str" | 42 | 
+jsonIteratorBad={"a":1};
+htJsonIterator={"a":{"k":[1,"two",null,true]},"d":2.5,"z":1} \n | {"x":"y"} \n | 
+string2Json.mapper={"a":[1,2],"b":"c"}
+string2Json.mapper.bad=!JSONParseException
+string2Json={"a":[1,2],"b":"c"}
+string2Json.bad=!JSONParseException
+json2String={"id":1,"name":"a","tags":["x","y"],"meta":{},"u":"é /"}
+json2Bytes={"id":2,"v":1.5,"n":null,"big":12345678901234567890,"e":[]}

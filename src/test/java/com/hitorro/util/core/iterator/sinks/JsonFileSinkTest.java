@@ -3,9 +3,9 @@
  */
 package com.hitorro.util.core.iterator.sinks;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.node.ObjectNode;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -14,6 +14,8 @@ import java.nio.file.Path;
 import java.util.zip.GZIPInputStream;
 
 import static org.junit.jupiter.api.Assertions.*;
+import com.hitorro.util.json.JsonMappers;
+import com.hitorro.util.json.JsonValues;
 
 /**
  * Round-trip tests for {@link JsonFileSink}. Covers:
@@ -29,7 +31,7 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 class JsonFileSinkTest {
 
-    private static final ObjectMapper JSON = new ObjectMapper();
+    private static final ObjectMapper JSON = JsonMappers.json();
 
     @Test
     void emptyRunEmitsEmptyArray(@TempDir Path tmp) throws Exception {
@@ -54,8 +56,8 @@ class JsonFileSinkTest {
         JsonNode tree = JSON.readTree(out.toFile());
         assertTrue(tree.isArray(), "top-level must be a JSON array");
         assertEquals(3, tree.size());
-        assertEquals("alpha", tree.get(0).get("name").asText());
-        assertEquals(3,       tree.get(2).get("id").asInt());
+        assertEquals("alpha", JsonValues.asText(tree.get(0).get("name")));
+        assertEquals(3,       JsonValues.asInt(tree.get(2).get("id")));
     }
 
     @Test
@@ -72,10 +74,10 @@ class JsonFileSinkTest {
         JsonNode tree = JSON.readTree(out.toFile());
         assertEquals(1, tree.size());
         JsonNode r = tree.get(0);
-        assertEquals(42, r.get("id").asInt());
-        assertEquals("x", r.get("meta").get("tag").asText());
+        assertEquals(42, JsonValues.asInt(r.get("id")));
+        assertEquals("x", JsonValues.asText(r.get("meta").get("tag")));
         assertEquals(3,   r.get("labels").size());
-        assertEquals("b", r.get("labels").get(1).asText());
+        assertEquals("b", JsonValues.asText(r.get("labels").get(1)));
     }
 
     @Test
@@ -109,7 +111,7 @@ class JsonFileSinkTest {
         try (var in = new GZIPInputStream(Files.newInputStream(out))) {
             JsonNode tree = JSON.readTree(in);
             assertTrue(tree.isArray());
-            assertEquals(1, tree.get(0).get("id").asInt());
+            assertEquals(1, JsonValues.asInt(tree.get(0).get("id")));
         }
     }
 

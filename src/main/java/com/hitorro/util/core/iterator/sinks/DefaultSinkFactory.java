@@ -21,7 +21,7 @@
  */
 package com.hitorro.util.core.iterator.sinks;
 
-import com.fasterxml.jackson.databind.JsonNode;
+import tools.jackson.databind.JsonNode;
 
 import java.util.function.Consumer;
 import java.util.function.Function;

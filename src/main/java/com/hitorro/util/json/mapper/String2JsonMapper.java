@@ -21,15 +21,17 @@
  */
 package com.hitorro.util.json.mapper;
 
-import com.fasterxml.jackson.core.JsonFactory;
-import com.fasterxml.jackson.databind.JsonNode;
+import tools.jackson.databind.JsonNode;
 import com.hitorro.util.core.iterator.json.HTJSONParser;
 import com.hitorro.util.core.iterator.mappers.BaseMapper;
 
 import java.io.IOException;
+import com.hitorro.util.json.JsonMappers;
+import tools.jackson.databind.json.JsonMapper;
+import tools.jackson.core.JacksonException;
 
 public class String2JsonMapper extends BaseMapper<String, JsonNode> {
-    private final static JsonFactory factory = new JsonFactory();
+    private final static JsonMapper factory = JsonMappers.json();
 
     public String2JsonMapper() {
     }
@@ -40,7 +42,7 @@ public class String2JsonMapper extends BaseMapper<String, JsonNode> {
             HTJSONParser parser = new HTJSONParser(factory.createParser(s));
             return parser.read();
 
-        } catch (IOException e) {
+        } catch (JacksonException e) {
             return null;
         }
     }

@@ -21,7 +21,7 @@
  */
 package com.hitorro.util.core.iterator.mapchains;
 
-import com.fasterxml.jackson.databind.JsonNode;
+import tools.jackson.databind.JsonNode;
 import com.hitorro.util.core.GenericKeyValue;
 import com.hitorro.util.core.string.StringUtil;
 

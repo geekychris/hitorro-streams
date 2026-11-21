@@ -21,7 +21,7 @@
  */
 package com.hitorro.util.json;
 
-import com.fasterxml.jackson.core.JsonGenerator;
+import tools.jackson.core.JsonGenerator;
 import com.hitorro.util.core.Log;
 import com.hitorro.util.core.string.Fmt;
 import com.hitorro.util.core.string.StringUtil;
@@ -91,17 +91,17 @@ public class JSONMap extends JSONElement<Map<String, JSONElement>> implements Ma
     }
 
     @Override
-    public void write(final JsonGenerator generator) throws IOException {
+    public void write(final JsonGenerator generator) {
         Set<Map.Entry<String, JSONElement>> set = getSet();
         for (Map.Entry<String, JSONElement> e : set) {
             JSONElement curr = e.getValue();
 
             if (curr.getJSONType() == JSONType.Map) {
-                generator.writeObjectFieldStart(e.getKey());
+                generator.writeObjectPropertyStart(e.getKey());
                 curr.write(generator);
                 generator.writeEndObject();
             } else {
-                generator.writeFieldName(e.getKey());
+                generator.writeName(e.getKey());
                 curr.write(generator);
             }
 

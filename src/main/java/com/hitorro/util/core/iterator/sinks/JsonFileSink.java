@@ -3,10 +3,9 @@
  */
 package com.hitorro.util.core.iterator.sinks;
 
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.core.JsonGenerator;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -14,6 +13,7 @@ import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.zip.GZIPOutputStream;
+import com.hitorro.util.json.JsonMappers;
 
 /**
  * Writes a single JSON array — {@code [row, row, row]} — to a local
@@ -30,7 +30,7 @@ import java.util.zip.GZIPOutputStream;
  */
 public final class JsonFileSink extends JsonNodeSinkBase {
 
-    private static final ObjectMapper JSON = new ObjectMapper();
+    private static final ObjectMapper JSON = JsonMappers.json();
 
     private final String url;
     private final boolean pretty;
@@ -49,8 +49,7 @@ public final class JsonFileSink extends JsonNodeSinkBase {
         out = url.endsWith(".gz")
                 ? new GZIPOutputStream(Files.newOutputStream(path))
                 : Files.newOutputStream(path);
-        gen = JSON.getFactory().createGenerator(out);
-        if (pretty) gen.setPrettyPrinter(new DefaultPrettyPrinter());
+        gen = (pretty ? JSON.writerWithDefaultPrettyPrinter() : JSON.writer()).createGenerator(out);
         gen.writeStartArray();
         return true;
     }

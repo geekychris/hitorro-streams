@@ -21,19 +21,21 @@
  */
 package com.hitorro.util.core.iterator;
 
-import com.fasterxml.jackson.core.JsonFactory;
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonToken;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.JsonNodeFactory;
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import tools.jackson.core.JsonParser;
+import tools.jackson.core.JsonToken;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.node.ArrayNode;
+import tools.jackson.databind.node.JsonNodeFactory;
+import tools.jackson.databind.node.ObjectNode;
 import com.hitorro.util.core.Log;
 import com.hitorro.util.typesystem.TypeIntf;
 import com.hitorro.util.typesystem.TypeManagerBase;
 
 import java.io.IOException;
 import java.io.Reader;
+import com.hitorro.util.json.JsonMappers;
+import tools.jackson.databind.json.JsonMapper;
+import tools.jackson.core.JacksonException;
 
 /**
  * JSON Iterator for jackson JsonNode trees
@@ -41,7 +43,7 @@ import java.io.Reader;
 public class JSONIterator extends AbstractIterator<JsonNode> {
     public static ObjectNode EmptyMap = JsonNodeFactory.instance.objectNode();
     public static ArrayNode EmptyList = JsonNodeFactory.instance.arrayNode();
-    private final static JsonFactory factory = new JsonFactory();
+    private final static JsonMapper factory = JsonMappers.json();
     public static final String HTTypeKey = "ht_type";
     private JsonParser parser = null;
     private JsonNode domlet;
@@ -68,7 +70,7 @@ public class JSONIterator extends AbstractIterator<JsonNode> {
         try {
             parser = factory.createParser(reader);
             // was running out of permspace, dont intern strings.
-        } catch (IOException e) {
+        } catch (JacksonException e) {
             Log.unitTime.error("Unable to create parser %s %e", e, e);
         }
         domlet = read();
@@ -108,22 +110,22 @@ public class JSONIterator extends AbstractIterator<JsonNode> {
                 ((ObjectNode) node).put(HTTypeKey, typeName);
             }
             return node;
-        } catch (IOException e) {
+        } catch (JacksonException e) {
             Log.util.error("Unable to read %s %e", e, e);
             return null;
         }
 
     }
 
-    private JsonNode readPrivate() throws IOException {
-        JsonToken tok = parser.getCurrentToken();
+    private JsonNode readPrivate() {
+        JsonToken tok = parser.currentToken();
         switch (tok) {
             case START_OBJECT:
                 return readObject();
             case START_ARRAY:
                 return readArray();
             case VALUE_STRING:
-                return JsonNodeFactory.instance.textNode(parser.getText());
+                return JsonNodeFactory.instance.stringNode(parser.getText());
             case VALUE_NUMBER_FLOAT:
             case VALUE_NUMBER_INT:
                 switch (parser.getNumberType()) {
@@ -162,19 +164,19 @@ public class JSONIterator extends AbstractIterator<JsonNode> {
         return JsonNodeFactory.instance.objectNode();
     }
 
-    private JsonNode readObject() throws IOException {
+    private JsonNode readObject() {
         parser.nextToken();
         ObjectNode map = getObjectNode();
-        if (parser.getCurrentToken() != JsonToken.END_OBJECT) {
+        if (parser.currentToken() != JsonToken.END_OBJECT) {
             // not an empty object
             do {
-                String name = parser.getCurrentName();
+                String name = parser.currentName();
                 parser.nextToken();
-                map.put(name, readPrivate());
+                map.set(name, readPrivate());
                 parser.nextToken();
 
             }
-            while (parser.getCurrentToken() != JsonToken.END_OBJECT);
+            while (parser.currentToken() != JsonToken.END_OBJECT);
         }
         if (map.size() == 0) {
             // we didnt use the apply
@@ -191,16 +193,16 @@ public class JSONIterator extends AbstractIterator<JsonNode> {
         return JsonNodeFactory.instance.arrayNode();
     }
 
-    private JsonNode readArray() throws IOException {
+    private JsonNode readArray() {
         parser.nextToken();
         ArrayNode list = getArrayNode();
-        if (parser.getCurrentToken() != JsonToken.END_ARRAY) {
+        if (parser.currentToken() != JsonToken.END_ARRAY) {
             // not an empty array
             do {
                 list.add(readPrivate());
                 parser.nextToken();
             }
-            while (parser.getCurrentToken() != JsonToken.END_ARRAY);
+            while (parser.currentToken() != JsonToken.END_ARRAY);
         }
         if (list.size() == 0) {
             return EmptyList;

@@ -21,8 +21,8 @@
  */
 package com.hitorro.util.json;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 import com.hitorro.util.core.Constants;
 import com.hitorro.util.core.iterator.mappers.BaseMapper;
 import com.hitorro.util.core.thread.ThreadStash;
@@ -30,6 +30,8 @@ import com.hitorro.util.core.thread.ThreadStash;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
+import com.hitorro.util.json.JsonMappers;
+import tools.jackson.core.JacksonException;
 
 public class Json2ByteArrayMapper extends BaseMapper<JsonNode, byte[]> {
     public static ThreadStash<Json2ByteArrayMapper> threadedMapper = new ThreadStash() {
@@ -37,7 +39,7 @@ public class Json2ByteArrayMapper extends BaseMapper<JsonNode, byte[]> {
             return new Json2ByteArrayMapper();
         }
     };
-    protected ObjectMapper mapper = new ObjectMapper();
+    protected ObjectMapper mapper = JsonMappers.json();
 
     @Override
     public byte[] apply(final JsonNode jsonNode) {
@@ -46,7 +48,7 @@ public class Json2ByteArrayMapper extends BaseMapper<JsonNode, byte[]> {
             OutputStreamWriter ow = new OutputStreamWriter(boas, Constants.UTF8);
             mapper.writeValue(ow, jsonNode);
             boas.flush();
-        } catch (IOException e) {
+        } catch (IOException | JacksonException e) {
             return null;
         }
         return boas.toByteArray();

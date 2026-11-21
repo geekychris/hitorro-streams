@@ -21,8 +21,8 @@
  */
 package com.hitorro.util.core;
 
-import com.fasterxml.jackson.databind.node.JsonNodeFactory;
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import tools.jackson.databind.node.JsonNodeFactory;
+import tools.jackson.databind.node.ObjectNode;
 import com.hitorro.util.core.iterator.mappers.BaseMapper;
 import com.hitorro.util.json.keys.propaccess.PropaccessError;
 
